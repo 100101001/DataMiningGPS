@@ -11,6 +11,9 @@ class Line:
         self.y2 = p2[1]
         self.len=math.sqrt(math.pow((self.x1-self.x2),2)+math.pow((self.y1-self.y2),2))
 
+    def __str__(self):
+        return "[({},{})-->({},{})]".format(self.x1, self.y1,self.x2, self.y2)
+
     # 定义两线相似性
     def similarity(self,line):
         # two lines' θ
@@ -81,27 +84,28 @@ line2=Line([0,0],[1,0])
 line1.similarity(line2)
 
 
-file="../training_data/5.txt"
+file="E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\5.txt"
 
-def readTrajectoryDataset(fileName):
-    s = open(fileName, 'r').read();
-    comp = s.split("\n")
-    trajectory = [];
-    trajectorySet = [];
-    for i in range(0, len(comp)):
-        comp[i] = comp[i].split(" ");
-        if (len(comp[i]) == 2):
-            # to double??
-            point = {
-                "x": float(comp[i][0]),
-                "y": float(comp[i][1])
-            }
-            trajectory.append(point);
-        else:
-            trajectorySet.append(trajectory);
-            trajectory = [];
+dataset=readTrajectoryDataset(file)
 
-    return trajectorySet;
+def points2line(dataset):
+    lines=[]
+    for trajectory in dataset:
+        for i in range(0,len(trajectory)-1):
+            p1 = [trajectory[i]['x'],trajectory[i]['y']]
+            p2 = [trajectory[i+1]['x'], trajectory[i+1]['y']]
+            lines.append(Line(p1,p2))
+    return lines
 
-#angle = GetCrossAngle(line1, line2)
-#print(angle)
+lines=points2line(dataset)
+
+# calculate similarity between line peers
+def distanceMatrix(lines):
+    dm=[]
+    for i in range(0, len(lines)):
+        dm_i=[]
+        for j in range(i + 1, len(lines)):
+            dm_i.append(lines[i].similarity(lines[j]))
+
+
+
