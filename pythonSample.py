@@ -11,7 +11,7 @@ def computeAverageTrajectory(trajectorySet):
     trajectories = format_dataset(trajectorySet)
 
     # 取平均数的方法
-    result = try_avg(dataset=trajectories, points_count=30)
+    result = try_avg(dataset=trajectories, points_count=40)
 
     # 打印结果
     print_result_graph(trajectories, result)
@@ -77,10 +77,11 @@ def main():
     dataSets = readAllDatasets(inputDirectory)
 
     # 临时限制测试数
-    dataSets = dataSets[:10]
+    dataSets = dataSets[:100]
 
     generatedRoadSegments = []
     for i in range(0, len(dataSets)):
+        # print(str(i)+": ")
         generatedRoadSegments.append(computeAverageTrajectory(dataSets[i]))
 
     writeSolution(generatedRoadSegments, outputFile)
