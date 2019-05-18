@@ -1,67 +1,90 @@
+from utility import *
+from test import *
+
+
 # function that computes the road segment from a trajectory set
 def computeAverageTrajectory(trajectorySet):
     # YOUR CODE SHOULD GO HERE
-
     # This demo returns the first trajectory in the set
-    return trajectorySet[0];
+
+    # 数据预处理
+    trajectories = format_dataset(trajectorySet)
+
+    # 取平均数的方法
+    result = try_avg(dataset=trajectories, points_count=30)
+
+    # 打印结果
+    print_result_graph(trajectories, result)
+
+    # 结果转化为可输出的格式
+    result = format_result(result)
+
+    return result
 
 
 # function reads all the datasets and returns each of them as part of an array
 def readAllDatasets(inputDirectory):
-    dataSets = [];
-    import os;
+    dataSets=[]
+    import os
     for i in range(0, len(os.listdir(inputDirectory))):
-        fileName = inputDirectory + "/" + str(i) + ".txt";
-        if (os.path.isfile(fileName)):
-            dataSets.append(readTrajectoryDataset(fileName));
-    return dataSets;
+        fileName = inputDirectory+"/"+str(i)+".txt"
+        if(os.path.isfile(fileName)):
+            dataSets.append(readTrajectoryDataset(fileName))
+    return dataSets
 
 
 # reads a set of trajectories from a file
 def readTrajectoryDataset(fileName):
-    s = open(fileName, 'r').read();
+    s = open(fileName, 'r').read()
     comp = s.split("\n")
-    trajectory = [];
-    trajectorySet = [];
+    trajectory = []
+    trajectorySet = []
     for i in range(0, len(comp)):
-        comp[i] = comp[i].split(" ");
-        if (len(comp[i]) == 2):
+        comp[i] = comp[i].split(" ")
+        if(len(comp[i]) == 2):
             # to double??
             point = {
                 "x": float(comp[i][0]),
                 "y": float(comp[i][1])
             }
-            trajectory.append(point);
+            trajectory.append(point)
         else:
-            trajectorySet.append(trajectory);
-            trajectory = [];
+            trajectorySet.append(trajectory)
+            trajectory = []
 
-    return trajectorySet;
+    return trajectorySet
 
 
 # function for writing the result to a file
 def writeSolution(generatedRoadSegments, outputFile):
-    string = "";
+    string=""
     for i in range(0, len(generatedRoadSegments)):
-        segm = generatedRoadSegments[i];
-        for j in range(0, len(segm)):
-            string += "{:.7f}".format(segm[j]["x"]) + " " + "{:.7f}".format(segm[j]["y"]) + "\n";
-        string += "\n";
+        segm = generatedRoadSegments[i]
+        for j in range(0,len(segm)):
+            string += "{:.7f}".format(segm[j]["x"])+" "+"{:.7f}".format(segm[j]["y"])+"\n"
+        string += "\n"
 
-    f = open(outputFile, "w+");
-    f.write(string);
-    f.close();
+    f = open(outputFile, "w+")
+    f.write(string)
+    f.close()
 
 
 # MAIN
-inputDirectory = "../training_data";
-outputFile = "solution.txt";
+def main():
+    inputDirectory = "./training_data"
+    outputFile = "solution.txt"
 
-dataSets = readAllDatasets(inputDirectory);
+    dataSets = readAllDatasets(inputDirectory)
 
-generatedRoadSegments = [];
-for i in range(0, len(dataSets)):
-    generatedRoadSegments.append(computeAverageTrajectory(dataSets[i]));
+    # 临时限制测试数
+    dataSets = dataSets[:10]
 
-writeSolution(generatedRoadSegments, outputFile);
+    generatedRoadSegments = []
+    for i in range(0, len(dataSets)):
+        generatedRoadSegments.append(computeAverageTrajectory(dataSets[i]))
 
+    writeSolution(generatedRoadSegments, outputFile)
+
+
+if __name__ == '__main__':
+    main()
