@@ -1,9 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+from pythonSample import *
+
+file="E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\96.txt"
+dataset=readTrajectoryDataset(file)
 
 
 class Line:
+    """
+    自定义线段类
+    属性：
+    两个端点的x, y值；线段长度len；线段所在直线的斜率k、截距b、角度angle以及直线是否垂直vertical（boolean）
+    """
     def __init__(self,p1,p2):
         self.x1=p1[0]
         self.y1=p1[1]
@@ -23,10 +32,8 @@ class Line:
             self.b=-self.k*self.x1+self.y1
             self.angle=math.atan(self.k)
 
-
     def __str__(self):
         return "[({},{})-->({},{})]".format(self.x1, self.y1,self.x2, self.y2)
-
 
     def similarity(self,line):
         """
@@ -43,9 +50,8 @@ class Line:
         y_project_1=0
         y_project_2=0
 
-        #
+        # 选择两条线中更长的作为直线，求得线段在该直线上的两个映射点坐标
         if self.len>=line.len:
-            # self 的斜率
             k=self.k
             if self.vertical!=True and k!=0:
                 x_project_1=(line.x1+k*line.y1-k*self.y1+k*k*self.x1)/(k*k+1)
@@ -80,16 +86,13 @@ class Line:
                 y_project_1 = self.y1
                 y_project_2 = self.y2
 
+        # 计算两种情况下的水平距离
         if self.len >= line.len:
             dh = (math.sqrt(math.pow(self.x1-x_project_1,2)+math.pow(self.y1-y_project_1,2))+math.sqrt(math.pow(self.x2-x_project_2,2)+math.pow(self.y2-y_project_2,2)))/2
         else:
             dh = (math.sqrt(math.pow(line.x1-x_project_1,2)+math.pow(line.y1-y_project_1,2))+math.sqrt(math.pow(line.x2-x_project_2,2)+math.pow(line.y2-y_project_2,2)))/2
-
-
-
-
-
         #print("horizontal distance: " + str(dh))
+
         # vertical distance
         dv=0
         if(self.len<=line.len):
@@ -106,11 +109,13 @@ class Line:
             dtheta=max(self.len,line.len)
         else:
             dtheta = min(self.len, line.len)*math.sin(angle)
-
         #print("angle range: "+str(dtheta))
+
+        # 两线段相似度，三种距离之和
         distance=dh+dv+dtheta
         #print("distance:"+str(distance))
         return distance
+
 
 def GetCrossAngle(l1, l2):
     """
@@ -123,6 +128,7 @@ def GetCrossAngle(l1, l2):
     arr_1 = np.array([(l2.x2 - l2.x1), (l2.y2 - l2.y1)])
     cos_value = (float(arr_0.dot(arr_1)) / (np.sqrt(arr_0.dot(arr_0)) * np.sqrt(arr_1.dot(arr_1))))   # 注意转成浮点数运算
     return np.arccos(cos_value)
+
 
 def GetPointToLineDistance(x1,y1,x2,y2,point_x,point_y):
     """
@@ -142,41 +148,6 @@ def GetPointToLineDistance(x1,y1,x2,y2,point_x,point_y):
     array_temp = array_line.dot(array_temp)
     return  np.sqrt((array_vec - array_temp).dot(array_vec - array_temp))
 
-def readTrajectoryDataset(fileName):
-    """
-    sample中的文件读取函数
-    :param fileName:
-    :return:
-    """
-    s = open(fileName, 'r').read();
-    comp = s.split("\n")
-    trajectory = [];
-    trajectorySet = [];
-    for i in range(0, len(comp)):
-        comp[i] = comp[i].split(" ");
-        if (len(comp[i]) == 2):
-            # to double??
-            point = {
-                "x": float(comp[i][0]),
-                "y": float(comp[i][1])
-            }
-            trajectory.append(point);
-        else:
-            trajectorySet.append(trajectory);
-            trajectory = [];
-
-    return trajectorySet;
-
-
-#
-# line1=Line([0,1],[1,1])
-# line2=Line([1,2],[2,2])
-# line1.similarity(line2)
-
-
-file="E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\96.txt"
-
-dataset=readTrajectoryDataset(file)
 
 def points2line(dataset):
     """
@@ -191,8 +162,6 @@ def points2line(dataset):
             p2 = [trajectory[i+1]['x'], trajectory[i+1]['y']]
             lines.append(Line(p1,p2))
     return lines
-
-lines=points2line(dataset)
 
 
 def distanceMatrix(lines):
@@ -210,14 +179,6 @@ def distanceMatrix(lines):
     return dm
 
 
-dm=distanceMatrix(lines)
-
-# OPTICS参数设定
-epsilon=0.02
-minPts=10
-
-
-
 def searchNeighbors(line,x0,y0,epsilon):
     """
     判断点是否在某条线段的矩形领域中
@@ -226,7 +187,7 @@ def searchNeighbors(line,x0,y0,epsilon):
     :param y0:
     :return: Boolean
     """
-
+    # 当线段有非0斜率
     if line.vertical==False and line.k != 0:
         b3 = line.b + epsilon/abs(math.cos(line.angle))
         b4=  line.b - epsilon/abs(math.cos(line.angle))
@@ -365,7 +326,14 @@ print([o[0] for o in O])
 
 
 def main():
-    pass
+    lines = points2line(dataset)
+    dm = distanceMatrix(lines)
+
+    # OPTICS参数设定
+    epsilon = 0.02
+    minPts = 10
+
+
 
 if __name__ =="__main__":
     main()

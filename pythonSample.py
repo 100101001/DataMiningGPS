@@ -35,6 +35,11 @@ def readAllDatasets(inputDirectory):
 
 # reads a set of trajectories from a file
 def readTrajectoryDataset(fileName):
+    """
+    sample中的文件读取函数
+    :param fileName:
+    :return:
+    """
     s = open(fileName, 'r').read()
     comp = s.split("\n")
     trajectory = []
