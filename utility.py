@@ -8,20 +8,17 @@ def format_dataset(dataset):
     :param dataset: 一份测试数据集，包括多条轨迹
     :return:
     """
-    # TODO: 轨迹方向判断和反转
-
-    # 字典格式 => 数组格式
-    # print(dataset)
-
     tmp = dataset[0][0]['x']
     tmp2 = dataset[0][0]['y']
     result = []
     for data in dataset:
         trajectory = []
         for point in data:
+            # 字典格式 => 数组格式
             trajectory.append([point['x'], point['y']])
         # print(trajectory)
-        if ((abs(data[0]['x']-tmp)>0.5)or(abs(data[0]['y']-tmp2)>0.5)):
+        # 轨迹方向判断和反转
+        if (abs(data[0]['x'] - tmp) > 0.5)or(abs(data[0]['y'] - tmp2) > 0.5):
             trajectory.reverse()
         # print(trajectory)
         # print("---------")
