@@ -168,6 +168,7 @@ def points2line(dataset):
     return lines
 
 
+
 def distanceMatrix(lines):
     """
     计算线段两两的相似度
@@ -233,29 +234,23 @@ def searchNeighbors(line, x0, y0, epsilon):
         return True
     return False
 
-
 def create_adj_matrix(lines, dm, epsilon):
     """
     创建邻接表并返回
     :param lines: 线段数组
     :return: 创建好的邻接表
     """
-    adjacent_matrix=[]
+    adjacent_matrix = []
     for i in range(len(lines)):
         adjacent_matrix_i=[]
         for j in range(len(lines)):
-            if i!=j:
-                if i<j:
-                    if dm[i][j - i - 1] <= epsilon:
+            if i != j:
+                if searchNeighbors(lines[i],lines[j].x1,lines[j].y1,epsilon)==True or searchNeighbors(lines[i],lines[j].x2,lines[j].y2,epsilon)==True:
+                    if i < j:
                         adjacent_matrix_i.append([dm[i][j - i - 1],j])
-                else:
-                    if dm[j][i-j-1] <= epsilon:
-                        adjacent_matrix_i.append([dm[j][i-j-1],j])
-        #print(adjacent_matrix_i)
-        adjacent_matrix.append(adjacent_matrix_i)
-    print(adjacent_matrix[0][:5])
-    print(adjacent_matrix[100][:5])
-    print(len(lines))
+                    else:
+                        adjacent_matrix_i.append([dm[j][i - j - 1], j])
+
     return adjacent_matrix
 
 
