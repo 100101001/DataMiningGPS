@@ -11,12 +11,18 @@ class Line:
         self.y2 = p2[1]
         self.len=math.sqrt(math.pow((self.x1-self.x2),2)+math.pow((self.y1-self.y2),2))
 
+
         if self.x2-self.x1==0:
             self.vertical=True
             self.k=0
+            self.b=0
+            self.angle=math.pi/2
         else:
             self.vertical = False
             self.k=(self.y2-self.y1)/(self.x2-self.x1)
+            self.b=-self.k*self.x1+self.y1
+            self.angle=math.atan(self.k)
+
 
     def __str__(self):
         return "[({},{})-->({},{})]".format(self.x1, self.y1,self.x2, self.y2)
@@ -210,6 +216,79 @@ dm=distanceMatrix(lines)
 epsilon=0.02
 minPts=10
 
+
+
+def searchNeighbors(line,x0,y0,epsilon):
+    """
+    判断点是否在某条线段的矩形领域中
+    :param line: Line 对象
+    :param x0:
+    :param y0:
+    :return: Boolean
+    """
+
+    if line.vertical==False and line.k != 0:
+        b3 = line.b + epsilon/abs(math.cos(line.angle))
+        b4=  line.b - epsilon/abs(math.cos(line.angle))
+        b1=0
+        b2=0
+        if line.y1<line.y2:
+            b1=(1/line.k)*line.x1+line.y1-epsilon/math.sin(line.angle)
+            b2=(1/line.k)*line.x2+line.y2+epsilon/math.sin(line.angle)
+        else:
+            b1 = (1 / line.k) * line.x2 + line.y2 - epsilon / math.sin(line.angle)
+            b2 = (1 / line.k) * line.x1 + line.y1 + epsilon / math.sin(line.angle)
+
+        if  line.k*x0+b4<y0 and line.k*x0+b3>y0 and (-1/line.k)*x0+b1<y0 and (-1/line.k)*x0+b2>y0:
+            return True
+        return False
+
+    if line.vertical==True:
+        y1=0
+        y2=0
+        if line.y1>line.y2:
+            y1=line.y2
+            y2=line.y1
+        else:
+            y1=line.y1
+            y2=line.y2
+        if x0< (line.x1+epsilon) and x0> (line.x1-epsilon) and y0<(y2+epsilon) and y0>(y1-epsilon):
+            return True
+        return False
+
+    x1=0
+    x2=0
+    if line.x1>line.x2:
+        x1=line.x2
+        x2=line.x1
+    else:
+        x1=line.x1
+        x2=line.x2
+    if y0 < (line.y1 + epsilon) and y0 > (line.y1 - epsilon) and x0 < (x2 + epsilon) and x0 > (x1 - epsilon):
+        return True
+    return False
+
+line1=Line([0,1],[1,1])
+line2=Line([1,2],[1,1])
+line3=Line([1,1],[2,2])
+line4=Line([1,2],[2,1])
+#line1.similarity(line2)
+
+answer=[]
+answer.append(searchNeighbors(line1,0.5,0.5,1))
+answer.append(searchNeighbors(line1,1.5,0.5,1))
+answer.append(searchNeighbors(line1,2.5,0.5,1))
+
+answer.append(searchNeighbors(line2,0.5,1.5,1))
+answer.append(searchNeighbors(line2,0.5,2.5,1))
+answer.append(searchNeighbors(line2,0.5,3.5,1))
+
+
+answer.append(searchNeighbors(line3,1,0.5,1))
+answer.append(searchNeighbors(line3,3,0.5,1))
+
+print(answer)
+
 #邻接表 func
 adjacent_matrix=[]
 for i in range(len(lines)):
@@ -283,3 +362,10 @@ plt.show()
 
 print(len(O))
 print([o[0] for o in O])
+
+
+def main():
+    pass
+
+if __name__ =="__main__":
+    main()
