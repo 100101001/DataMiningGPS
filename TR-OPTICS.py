@@ -4,11 +4,11 @@ import math
 from pythonSample import *
 import matplotlib.pyplot as plt
 
-file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\96.txt"
+file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\5.txt"
 dataset = readTrajectoryDataset(file)
 # OPTICS参数设定
-epsilon = 0.02
-minPts = 10
+epsilon = 0.05
+minPts = 13
 
 
 class Line:
@@ -250,23 +250,64 @@ def create_adj_matrix(lines, dm, epsilon):
                         adjacent_matrix_i.append([dm[i][j - i - 1],j])
                     else:
                         adjacent_matrix_i.append([dm[j][i - j - 1], j])
-
+        print("领域范围内的轨迹号")
+        print(i)
+        print(adjacent_matrix_i)
+        adjacent_matrix.append(adjacent_matrix_i)
     return adjacent_matrix
 
-def cal_core_and_reachable_dist(adj_matrix):
+
+def cal_core_and_reachable_dist(adj_matrix,dm):
+    """
+    计算核心轨迹的核心距离，以及轨迹间的可达距离，更新邻接表为可达距离
+    :param adj_matrix: 邻接表
+    :param dm: 距离矩阵
+    :return: 核心距离，可达距离，邻接表
     """
 
-    :return:
-    """
+    # core_distance[i] 代表使核心轨迹i成为核心对象的距离
     core_distance=[]
     for i in range(len(adj_matrix)):
-        if len(adj_matrix[i]) < minPts:
-            core_distance.append(adj_matrix[i].sort()[minPts-1])
+        if len(adj_matrix[i]) > minPts:
+            sorted_adj=sorted(adj_matrix[i])
+            core_distance.append(sorted_adj[minPts-1][0])
         else:
             core_distance.append(-1)
-
+    print("核心距离")
+    print(core_distance)
+    # reachable_distance[i][j] 代表轨迹i关于轨迹j的核心可达距离; 取核心距离与两者相似度的较大值
     reachable_distance=[]
-    for i 
+    for i in range(len(adj_matrix)):
+        reachable_distance_i=[]
+        for j in range(len(adj_matrix)):
+            if i!=j:
+                if i < j:
+                    reachable_distance_i.append(max(core_distance[i], dm[i][j - i - 1]))
+                else:
+                    reachable_distance_i.append(max(core_distance[i], dm[j][i - j - 1]))
+            else:
+                reachable_distance_i.append(max(core_distance[i],0))
+        reachable_distance.append(reachable_distance_i)
+
+    print("可达距离")
+    print(reachable_distance)
+
+    # 使用核心可达距离更新邻接表,是核心对象直接可达领域范围内对象的距离，还是领域范围内对象到核心对象的核心可达距离?
+    for i in range(len(adj_matrix)):
+        for j in range(len(adj_matrix[i])):
+            if i!=j:
+                adj_matrix[i][j][0]=reachable_distance[adj_matrix[i][j][1]][i]
+
+    # adjacent_matrix=[]
+    # for i in range(len(adj_matrix)):
+    #     if len(adj_matrix[i])>minPts:
+    #         adjacent_matrix.append(adj_matrix[i])
+
+    return core_distance,reachable_distance,adj_matrix
+                
+        
+    
+
 
 def findElemInTupleList(list, value, index):
     """
@@ -295,9 +336,10 @@ def TR_OPTICS(lines, adjacent_matrix, minPts):
     # 有序集合S，结果集O
     S=[]
     O=[]
-    for i in range(len(lines)):
+    for i in range(len(adjacent_matrix)):
         if len(S)==0:
             pts=adjacent_matrix[i]
+
             if len(pts)>minPts:
                 O.append([0,i])
                 for s in adjacent_matrix[i]:
@@ -325,38 +367,41 @@ def TR_OPTICS(lines, adjacent_matrix, minPts):
 
 
 def main():
-    # lines = points2line(dataset)
-    # dm = distanceMatrix(lines)
-    # am = create_adj_matrix(lines, dm, epsilon)
-    # O = TR_OPTICS(lines, am, minPts)
+
+    lines = points2line(dataset)
+    dm = distanceMatrix(lines)
+    am = create_adj_matrix(lines, dm, epsilon)
+    core_dist,reachable_dist,adj_matrix=cal_core_and_reachable_dist(am,dm)
+    O = TR_OPTICS(lines, adj_matrix, minPts)
+
+    
+    plt.plot(range(len(O)), [o[0] for o in O])
+    plt.scatter(range(len(O)), [o[0] for o in O], s=10, c='red')
+    plt.show()
+
+    print(len(O))
+    print([o[0] for o in O])
+
+    # # 测试邻域函数
+    # line1 = Line([0, 1], [1, 1])
+    # line2 = Line([1, 2], [1, 1])
+    # line3 = Line([1, 1], [2, 2])
+    # line4 = Line([1, 2], [2, 1])
+    # # line1.similarity(line2)
     #
-    # plt.plot(range(len(O)), [o[0] for o in O])
-    # plt.scatter(range(len(O)), [o[0] for o in O], s=10, c='red')
-    # plt.show()
+    # answer = []
+    # answer.append(searchNeighbors(line1, 0.5, 0.5, 1))
+    # answer.append(searchNeighbors(line1, 1.5, 0.5, 1))
+    # answer.append(searchNeighbors(line1, 2.5, 0.5, 1))
     #
-    # print(len(O))
-    # print([o[0] for o in O])
-
-    # 测试邻域函数
-    line1 = Line([0, 1], [1, 1])
-    line2 = Line([1, 2], [1, 1])
-    line3 = Line([1, 1], [2, 2])
-    line4 = Line([1, 2], [2, 1])
-    # line1.similarity(line2)
-
-    answer = []
-    answer.append(searchNeighbors(line1, 0.5, 0.5, 1))
-    answer.append(searchNeighbors(line1, 1.5, 0.5, 1))
-    answer.append(searchNeighbors(line1, 2.5, 0.5, 1))
-
-    answer.append(searchNeighbors(line2, 0.5, 1.5, 1))
-    answer.append(searchNeighbors(line2, 0.5, 2.5, 1))
-    answer.append(searchNeighbors(line2, 0.5, 3.5, 1))
-
-    answer.append(searchNeighbors(line3, 1, 0.5, 1))
-    answer.append(searchNeighbors(line3, 3, 0.5, 1))
-
-    print(answer)
+    # answer.append(searchNeighbors(line2, 0.5, 1.5, 1))
+    # answer.append(searchNeighbors(line2, 0.5, 2.5, 1))
+    # answer.append(searchNeighbors(line2, 0.5, 3.5, 1))
+    #
+    # answer.append(searchNeighbors(line3, 1, 0.5, 1))
+    # answer.append(searchNeighbors(line3, 3, 0.5, 1))
+    #
+    # print(answer)
 
 
 if __name__ == "__main__":
