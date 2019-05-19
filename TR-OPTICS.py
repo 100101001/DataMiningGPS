@@ -2,9 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from pythonSample import *
+import matplotlib.pyplot as plt
 
-file="E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\96.txt"
-dataset=readTrajectoryDataset(file)
+file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\96.txt"
+dataset = readTrajectoryDataset(file)
+# OPTICS参数设定
+epsilon = 0.02
+minPts = 10
 
 
 class Line:
@@ -130,7 +134,7 @@ def GetCrossAngle(l1, l2):
     return np.arccos(cos_value)
 
 
-def GetPointToLineDistance(x1,y1,x2,y2,point_x,point_y):
+def GetPointToLineDistance(x1, x2, y1, y2, point_x, point_y):
     """
     一个点到线段的距离
     :param x1:
@@ -179,7 +183,7 @@ def distanceMatrix(lines):
     return dm
 
 
-def searchNeighbors(line,x0,y0,epsilon):
+def searchNeighbors(line, x0, y0, epsilon):
     """
     判断点是否在某条线段的矩形领域中
     :param line: Line 对象
@@ -187,7 +191,7 @@ def searchNeighbors(line,x0,y0,epsilon):
     :param y0:
     :return: Boolean
     """
-    # 当线段有非0斜率
+    # 当线段不是水平、垂直的
     if line.vertical==False and line.k != 0:
         b3 = line.b + epsilon/abs(math.cos(line.angle))
         b4=  line.b - epsilon/abs(math.cos(line.angle))
@@ -203,7 +207,7 @@ def searchNeighbors(line,x0,y0,epsilon):
         if  line.k*x0+b4<y0 and line.k*x0+b3>y0 and (-1/line.k)*x0+b1<y0 and (-1/line.k)*x0+b2>y0:
             return True
         return False
-
+    # 线段垂直
     if line.vertical==True:
         y1=0
         y2=0
@@ -216,7 +220,7 @@ def searchNeighbors(line,x0,y0,epsilon):
         if x0< (line.x1+epsilon) and x0> (line.x1-epsilon) and y0<(y2+epsilon) and y0>(y1-epsilon):
             return True
         return False
-
+    # 线段水平
     x1=0
     x2=0
     if line.x1>line.x2:
@@ -229,49 +233,33 @@ def searchNeighbors(line,x0,y0,epsilon):
         return True
     return False
 
-line1=Line([0,1],[1,1])
-line2=Line([1,2],[1,1])
-line3=Line([1,1],[2,2])
-line4=Line([1,2],[2,1])
-#line1.similarity(line2)
 
-answer=[]
-answer.append(searchNeighbors(line1,0.5,0.5,1))
-answer.append(searchNeighbors(line1,1.5,0.5,1))
-answer.append(searchNeighbors(line1,2.5,0.5,1))
+def create_adj_matrix(lines, dm, epsilon):
+    """
+    创建邻接表并返回
+    :param lines: 线段数组
+    :return: 创建好的邻接表
+    """
+    adjacent_matrix=[]
+    for i in range(len(lines)):
+        adjacent_matrix_i=[]
+        for j in range(len(lines)):
+            if i!=j:
+                if i<j:
+                    if dm[i][j - i - 1] <= epsilon:
+                        adjacent_matrix_i.append([dm[i][j - i - 1],j])
+                else:
+                    if dm[j][i-j-1] <= epsilon:
+                        adjacent_matrix_i.append([dm[j][i-j-1],j])
+        #print(adjacent_matrix_i)
+        adjacent_matrix.append(adjacent_matrix_i)
+    print(adjacent_matrix[0][:5])
+    print(adjacent_matrix[100][:5])
+    print(len(lines))
+    return adjacent_matrix
 
-answer.append(searchNeighbors(line2,0.5,1.5,1))
-answer.append(searchNeighbors(line2,0.5,2.5,1))
-answer.append(searchNeighbors(line2,0.5,3.5,1))
 
-
-answer.append(searchNeighbors(line3,1,0.5,1))
-answer.append(searchNeighbors(line3,3,0.5,1))
-
-print(answer)
-
-#邻接表 func
-adjacent_matrix=[]
-for i in range(len(lines)):
-    adjacent_matrix_i=[]
-    for j in range(len(lines)):
-        if i!=j:
-            if i<j:
-                if dm[i][j - i - 1] <= epsilon:
-                    adjacent_matrix_i.append([dm[i][j - i - 1],j])
-            else:
-                if dm[j][i-j-1]<=epsilon:
-                    adjacent_matrix_i.append([dm[j][i-j-1],j])
-    #print(adjacent_matrix_i)
-    adjacent_matrix.append(adjacent_matrix_i)
-print(adjacent_matrix[0][:5])
-print(adjacent_matrix[100][:5])
-print(len(lines))
-# 有序集合S，结果集O
-S=[]
-O=[]
-
-def findElemInTupleList(list,value,index):
+def findElemInTupleList(list, value, index):
     """
     找到目标元组在数组中的位置
     :param list: 数组
@@ -286,54 +274,81 @@ def findElemInTupleList(list,value,index):
         i=i+1
     return -1
 
-#
-for i in range(len(lines)):
-    if len(S)==0:
-        pts=adjacent_matrix[i]
-        if len(pts)>minPts:
-            O.append([0,i])
-            for s in adjacent_matrix[i]:
-                if s[1] not in O:
-                    if findElemInTupleList(S,s[1],1)==-1:
-                        S.append(s)
-                    else:
-                        S[findElemInTupleList(S, s[1], 1)][0] = s[0]
-            S.sort()
-    else:
-        i = i - 1
-        s0 = S[0]
-        del S[0]
-        pts = adjacent_matrix[s0[1]]
-        if len(pts) > minPts:
-            O.append(s0)
-            for s in adjacent_matrix[s0[1]]:
-                if s[1] not in O:
-                    if findElemInTupleList(S, s[1], 1) == -1:
-                        S.append(s)
-                    else:
-                        S[findElemInTupleList(S, s[1], 1)][0] = s[0]
-            S.sort()
 
-
-import matplotlib.pyplot as plt
-
-plt.plot(range(len(O)),[o[0] for o in O])
-plt.scatter(range(len(O)),[o[0] for o in O],s=10,c='red')
-plt.show()
-
-print(len(O))
-print([o[0] for o in O])
+def TR_OPTICS(lines, adjacent_matrix, minPts):
+    """
+    TR-OPTICS核心算法
+    :param lines: 包含所有线段的数组
+    :param adjacent_matrix: 邻接表
+    :param minPts: 限定邻域内的最少点数
+    :return: 结果数组O
+    """
+    # 有序集合S，结果集O
+    S=[]
+    O=[]
+    for i in range(len(lines)):
+        if len(S)==0:
+            pts=adjacent_matrix[i]
+            if len(pts)>minPts:
+                O.append([0,i])
+                for s in adjacent_matrix[i]:
+                    if s[1] not in O:
+                        if findElemInTupleList(S,s[1],1)==-1:
+                            S.append(s)
+                        else:
+                            S[findElemInTupleList(S, s[1], 1)][0] = s[0]
+                S.sort()
+        else:
+            i = i - 1
+            s0 = S[0]
+            del S[0]
+            pts = adjacent_matrix[s0[1]]
+            if len(pts) > minPts:
+                O.append(s0)
+                for s in adjacent_matrix[s0[1]]:
+                    if s[1] not in O:
+                        if findElemInTupleList(S, s[1], 1) == -1:
+                            S.append(s)
+                        else:
+                            S[findElemInTupleList(S, s[1], 1)][0] = s[0]
+                S.sort()
+    return O
 
 
 def main():
-    lines = points2line(dataset)
-    dm = distanceMatrix(lines)
+    # lines = points2line(dataset)
+    # dm = distanceMatrix(lines)
+    # am = create_adj_matrix(lines, dm, epsilon)
+    # O = TR_OPTICS(lines, am, minPts)
+    #
+    # plt.plot(range(len(O)), [o[0] for o in O])
+    # plt.scatter(range(len(O)), [o[0] for o in O], s=10, c='red')
+    # plt.show()
+    #
+    # print(len(O))
+    # print([o[0] for o in O])
 
-    # OPTICS参数设定
-    epsilon = 0.02
-    minPts = 10
+    # 测试邻域函数
+    line1 = Line([0, 1], [1, 1])
+    line2 = Line([1, 2], [1, 1])
+    line3 = Line([1, 1], [2, 2])
+    line4 = Line([1, 2], [2, 1])
+    # line1.similarity(line2)
+
+    answer = []
+    answer.append(searchNeighbors(line1, 0.5, 0.5, 1))
+    answer.append(searchNeighbors(line1, 1.5, 0.5, 1))
+    answer.append(searchNeighbors(line1, 2.5, 0.5, 1))
+
+    answer.append(searchNeighbors(line2, 0.5, 1.5, 1))
+    answer.append(searchNeighbors(line2, 0.5, 2.5, 1))
+    answer.append(searchNeighbors(line2, 0.5, 3.5, 1))
+
+    answer.append(searchNeighbors(line3, 1, 0.5, 1))
+    answer.append(searchNeighbors(line3, 3, 0.5, 1))
+
+    print(answer)
 
 
-
-if __name__ =="__main__":
+if __name__ == "__main__":
     main()
