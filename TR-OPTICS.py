@@ -236,7 +236,7 @@ def searchNeighbors(line, x0, y0, epsilon):
 
 def create_adj_matrix(lines, dm, epsilon):
     """
-    创建邻接表并返回
+    创建邻接表并返回，基表的邻表是搜索范围内的线段
     :param lines: 线段数组
     :return: 创建好的邻接表
     """
@@ -253,6 +253,20 @@ def create_adj_matrix(lines, dm, epsilon):
 
     return adjacent_matrix
 
+def cal_core_and_reachable_dist(adj_matrix):
+    """
+
+    :return:
+    """
+    core_distance=[]
+    for i in range(len(adj_matrix)):
+        if len(adj_matrix[i]) < minPts:
+            core_distance.append(adj_matrix[i].sort()[minPts-1])
+        else:
+            core_distance.append(-1)
+
+    reachable_distance=[]
+    for i 
 
 def findElemInTupleList(list, value, index):
     """
