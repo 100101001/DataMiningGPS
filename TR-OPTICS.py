@@ -4,11 +4,13 @@ import math
 from pythonSample import *
 import matplotlib.pyplot as plt
 
+
 file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\5.txt"
 dataset = readTrajectoryDataset(file)
 # OPTICS参数设定
-epsilon = 0.05
-minPts = 13
+epsilon = 0.1
+minPts = 5
+CORNER_ANGLE = math.pi / 4
 
 
 class Line:
@@ -37,7 +39,11 @@ class Line:
             self.angle=math.atan(self.k)
 
     def __str__(self):
-        return "[({},{})-->({},{})]".format(self.x1, self.y1,self.x2, self.y2)
+        return "[({},{})-->({},{})]".format(self.x1, self.y1, self.x2, self.y2)
+
+
+
+
 
     def similarity(self,line):
         """
@@ -55,11 +61,11 @@ class Line:
         y_project_2=0
 
         # 选择两条线中更长的作为直线，求得线段在该直线上的两个映射点坐标
-        if self.len>=line.len:
-            k=self.k
+        if self.len >= line.len:
+            k = self.k
             if self.vertical!=True and k!=0:
-                x_project_1=(line.x1+k*line.y1-k*self.y1+k*k*self.x1)/(k*k+1)
-                y_project_1=(k*k*line.x1-line.y1*k+k*self.y1-k*k*self.x1)/(k*k*k+k)+line.y1
+                x_project_1 = (line.x1+k*line.y1-k*self.y1+k*k*self.x1)/(k*k+1)
+                y_project_1 = (k*k*line.x1-line.y1*k+k*self.y1-k*k*self.x1)/(k*k*k+k)+line.y1
                 x_project_2 = (line.x2 + k * line.y2 - k * self.y1 + k * k * self.x1) / (k * k + 1)
                 y_project_2 = (k * k * line.x2 - line.y2 * k + k * self.y1 - k * k * self.x1) / (k * k * k + k) + line.y2
             if self.vertical!=True and k==0:
@@ -150,7 +156,7 @@ def GetPointToLineDistance(x1, x2, y1, y2, point_x, point_y):
     # 用向量计算点到直线距离
     array_temp = (float(array_vec.dot(array_line)) / array_line.dot(array_line))   # 注意转成浮点数运算
     array_temp = array_line.dot(array_temp)
-    return  np.sqrt((array_vec - array_temp).dot(array_vec - array_temp))
+    return np.sqrt((array_vec - array_temp).dot(array_vec - array_temp))
 
 
 def points2line(dataset):
@@ -165,8 +171,15 @@ def points2line(dataset):
             p1 = [trajectory[i]['x'],trajectory[i]['y']]
             p2 = [trajectory[i+1]['x'], trajectory[i+1]['y']]
             lines.append(Line(p1,p2))
-    return lines
 
+    for trajectory in dataset:
+        xs=[]
+        ys=[]
+        for i in range(0, len(trajectory) - 1):
+            xs.append(trajectory[i]['x'])
+            ys.append(trajectory[i]['y'])
+        plt.plot(xs,ys)
+    return lines
 
 
 def distanceMatrix(lines):
@@ -175,7 +188,7 @@ def distanceMatrix(lines):
     :param lines: 一个文件的所有线段(轨迹分的)
     :return: dm[i][j] 代表 线段 i 与 线段 j+i+1 的相似度。i的取值范围是 0到线段数量-1，j的范围参考左上三角形。
     """
-    dm=[]
+    dm = []
     for i in range(0, len(lines)):
         dm_i=[]
         for j in range(i + 1, len(lines)):
@@ -193,46 +206,47 @@ def searchNeighbors(line, x0, y0, epsilon):
     :return: Boolean
     """
     # 当线段不是水平、垂直的
-    if line.vertical==False and line.k != 0:
+    if line.vertical == False and line.k != 0:
         b3 = line.b + epsilon/abs(math.cos(line.angle))
-        b4=  line.b - epsilon/abs(math.cos(line.angle))
-        b1=0
-        b2=0
-        if line.y1<line.y2:
-            b1=(1/line.k)*line.x1+line.y1-epsilon/math.sin(line.angle)
-            b2=(1/line.k)*line.x2+line.y2+epsilon/math.sin(line.angle)
+        b4 = line.b - epsilon/abs(math.cos(line.angle))
+        b1 = 0
+        b2 = 0
+        if line.y1 < line.y2:
+            b1 = (1/line.k)*line.x1+line.y1-epsilon/math.sin(line.angle)
+            b2 = (1/line.k)*line.x2+line.y2+epsilon/math.sin(line.angle)
         else:
             b1 = (1 / line.k) * line.x2 + line.y2 - epsilon / math.sin(line.angle)
             b2 = (1 / line.k) * line.x1 + line.y1 + epsilon / math.sin(line.angle)
 
-        if  line.k*x0+b4<y0 and line.k*x0+b3>y0 and (-1/line.k)*x0+b1<y0 and (-1/line.k)*x0+b2>y0:
+        if  line.k*x0+b4 < y0 and line.k*x0+b3 > y0 and (-1/line.k)*x0+b1 < y0 and (-1/line.k)*x0+b2 > y0:
             return True
         return False
     # 线段垂直
-    if line.vertical==True:
-        y1=0
-        y2=0
+    if line.vertical == True:
+        y1 = 0
+        y2 = 0
         if line.y1>line.y2:
-            y1=line.y2
-            y2=line.y1
+            y1 = line.y2
+            y2 = line.y1
         else:
-            y1=line.y1
-            y2=line.y2
-        if x0< (line.x1+epsilon) and x0> (line.x1-epsilon) and y0<(y2+epsilon) and y0>(y1-epsilon):
+            y1 = line.y1
+            y2 = line.y2
+        if x0 < (line.x1+epsilon) and x0 > (line.x1-epsilon) and y0 < (y2+epsilon) and y0 > (y1-epsilon):
             return True
         return False
     # 线段水平
-    x1=0
-    x2=0
-    if line.x1>line.x2:
-        x1=line.x2
-        x2=line.x1
+    x1 = 0
+    x2 = 0
+    if line.x1 > line.x2:
+        x1 = line.x2
+        x2 = line.x1
     else:
-        x1=line.x1
-        x2=line.x2
+        x1 = line.x1
+        x2 = line.x2
     if y0 < (line.y1 + epsilon) and y0 > (line.y1 - epsilon) and x0 < (x2 + epsilon) and x0 > (x1 - epsilon):
         return True
     return False
+
 
 def create_adj_matrix(lines, dm, epsilon):
     """
@@ -304,9 +318,6 @@ def cal_core_and_reachable_dist(adj_matrix,dm):
     #         adjacent_matrix.append(adj_matrix[i])
 
     return core_distance,reachable_distance,adj_matrix
-                
-        
-    
 
 
 def findElemInTupleList(list, value, index):
@@ -334,13 +345,13 @@ def TR_OPTICS(lines, adjacent_matrix, minPts):
     :return: 结果数组O
     """
     # 有序集合S，结果集O
-    S=[]
-    O=[]
+    S = []
+    O = []
     for i in range(len(adjacent_matrix)):
-        if len(S)==0:
-            pts=adjacent_matrix[i]
+        if len(S) == 0:
+            pts = adjacent_matrix[i]
 
-            if len(pts)>minPts:
+            if len(pts) > minPts:
                 O.append([0,i])
                 for s in adjacent_matrix[i]:
                     if s[1] not in O:
@@ -366,43 +377,109 @@ def TR_OPTICS(lines, adjacent_matrix, minPts):
     return O
 
 
-def main():
+def points2line_2(dataset):
+    """
+    把轨迹文件的点转换成线段
+    :param dataset: 一个轨迹文件，字典（点）数组
+    :return: 文件中包含的所有轨迹分的线段数组
+    """
+    lines=[]
+    for trajectory in dataset:
+        line=[]
+        for i in range(0,len(trajectory)-1):
+            p1 = [trajectory[i]['x'],trajectory[i]['y']]
+            p2 = [trajectory[i+1]['x'], trajectory[i+1]['y']]
+            line.append(Line(p1,p2))
+        lines.append(line)
 
+    # for trajectory in dataset:
+    #     xs=[]
+    #     ys=[]
+    #     for i in range(0, len(trajectory) - 1):
+    #         xs.append(trajectory[i]['x'])
+    #         ys.append(trajectory[i]['y'])
+    #     plt.plot(xs,ys)
+    return lines
+
+
+def delete_point(line1, line2):
+    # 两线都不垂直于x轴，斜率都存在
+    theta = GetCrossAngle(line1, line2)
+    print(theta * 180 / math.pi)
+    if theta < CORNER_ANGLE:
+        return [Line([line1.x1, line1.y1], [line2.x2, line2.y2])]  # 转角小于 pi / 4, 删中间点，构造新线段返回
+    else:
+        return [line1, line2]  # 转角大于 pi / 4, 不删点，直接返回两条原来的输入线段
+
+
+def draw_traj(traj, color):
+    x = []
+    y = []
+    for l in traj:
+        x.append(l.x1)
+        x.append(l.x2)
+        y.append(l.y1)
+        y.append(l.y2)
+
+    plt.plot(x, y, c = color)
+
+
+def test_delete_point():
+    lines = points2line_2(dataset)
+    new_lines = []
+
+    for i in delete_point(lines[0][0], lines[0][1]):
+        new_lines.append(i)
+    i = 2
+    while i < len(lines[0]):
+        line1 = new_lines[-1]
+        line2 = lines[0][i]
+        lines_return = delete_point(line1, line2)
+        if len(lines_return) == 2:
+            new_lines.append(line2)
+        if len(lines_return) == 1:
+            new_lines[-1] = lines_return[0]
+        i += 1
+
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    draw_traj(lines[0], 'b')
+    draw_traj(new_lines, 'r')
+
+    plt.show()
+
+
+def main():
     lines = points2line(dataset)
+    print(len(lines))
     dm = distanceMatrix(lines)
     am = create_adj_matrix(lines, dm, epsilon)
-    core_dist,reachable_dist,adj_matrix=cal_core_and_reachable_dist(am,dm)
+    core_dist, reachable_dist, adj_matrix = cal_core_and_reachable_dist(am,dm)
     O = TR_OPTICS(lines, adj_matrix, minPts)
 
-    
+    print(len(O))
+    print([o[0] for o in O])
+    result = []
+    j = 0
+    for o in O:
+        result.append([o[1], j])
+    print(result)
+    x = []
+    y = []
+    for r in result:
+        x.append(lines[r[0]].x1)
+        x.append(lines[r[0]].x2)
+        y.append(lines[r[0]].y1)
+        y.append(lines[r[0]].y2)
+    print(x)
+    print(y)
+    plt.scatter(x, y)
+    plt.show()
     plt.plot(range(len(O)), [o[0] for o in O])
     plt.scatter(range(len(O)), [o[0] for o in O], s=10, c='red')
     plt.show()
 
-    print(len(O))
-    print([o[0] for o in O])
-
-    # # 测试邻域函数
-    # line1 = Line([0, 1], [1, 1])
-    # line2 = Line([1, 2], [1, 1])
-    # line3 = Line([1, 1], [2, 2])
-    # line4 = Line([1, 2], [2, 1])
-    # # line1.similarity(line2)
-    #
-    # answer = []
-    # answer.append(searchNeighbors(line1, 0.5, 0.5, 1))
-    # answer.append(searchNeighbors(line1, 1.5, 0.5, 1))
-    # answer.append(searchNeighbors(line1, 2.5, 0.5, 1))
-    #
-    # answer.append(searchNeighbors(line2, 0.5, 1.5, 1))
-    # answer.append(searchNeighbors(line2, 0.5, 2.5, 1))
-    # answer.append(searchNeighbors(line2, 0.5, 3.5, 1))
-    #
-    # answer.append(searchNeighbors(line3, 1, 0.5, 1))
-    # answer.append(searchNeighbors(line3, 3, 0.5, 1))
-    #
-    # print(answer)
-
 
 if __name__ == "__main__":
-    main()
+    # main()
+    test_delete_point()
