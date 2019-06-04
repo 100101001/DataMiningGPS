@@ -176,7 +176,6 @@ def points2line(dataset):
     return lines
 
 
-
 def distanceMatrix(lines):
     """
     计算线段两两的相似度
@@ -201,43 +200,43 @@ def searchNeighbors(line, x0, y0, epsilon):
     :return: Boolean
     """
     # 当线段不是水平、垂直的
-    if line.vertical==False and line.k != 0:
+    if line.vertical == False and line.k != 0:
         b3 = line.b + epsilon/abs(math.cos(line.angle))
-        b4=  line.b - epsilon/abs(math.cos(line.angle))
-        b1=0
-        b2=0
-        if line.y1<line.y2:
-            b1=(1/line.k)*line.x1+line.y1-epsilon/math.sin(line.angle)
-            b2=(1/line.k)*line.x2+line.y2+epsilon/math.sin(line.angle)
+        b4 = line.b - epsilon/abs(math.cos(line.angle))
+        b1 = 0
+        b2 = 0
+        if line.y1 < line.y2:
+            b1 = (1/line.k)*line.x1+line.y1-epsilon/math.sin(line.angle)
+            b2 = (1/line.k)*line.x2+line.y2+epsilon/math.sin(line.angle)
         else:
             b1 = (1 / line.k) * line.x2 + line.y2 - epsilon / math.sin(line.angle)
             b2 = (1 / line.k) * line.x1 + line.y1 + epsilon / math.sin(line.angle)
 
-        if  line.k*x0+b4<y0 and line.k*x0+b3>y0 and (-1/line.k)*x0+b1<y0 and (-1/line.k)*x0+b2>y0:
+        if  line.k*x0+b4 < y0 and line.k*x0+b3 > y0 and (-1/line.k)*x0+b1 < y0 and (-1/line.k)*x0+b2 > y0:
             return True
         return False
     # 线段垂直
-    if line.vertical==True:
-        y1=0
-        y2=0
+    if line.vertical == True:
+        y1 = 0
+        y2 = 0
         if line.y1>line.y2:
-            y1=line.y2
-            y2=line.y1
+            y1 = line.y2
+            y2 = line.y1
         else:
-            y1=line.y1
-            y2=line.y2
-        if x0< (line.x1+epsilon) and x0> (line.x1-epsilon) and y0<(y2+epsilon) and y0>(y1-epsilon):
+            y1 = line.y1
+            y2 = line.y2
+        if x0 < (line.x1+epsilon) and x0 > (line.x1-epsilon) and y0 < (y2+epsilon) and y0 > (y1-epsilon):
             return True
         return False
     # 线段水平
-    x1=0
-    x2=0
-    if line.x1>line.x2:
-        x1=line.x2
-        x2=line.x1
+    x1 = 0
+    x2 = 0
+    if line.x1 > line.x2:
+        x1 = line.x2
+        x2 = line.x1
     else:
-        x1=line.x1
-        x2=line.x2
+        x1 = line.x1
+        x2 = line.x2
     if y0 < (line.y1 + epsilon) and y0 > (line.y1 - epsilon) and x0 < (x2 + epsilon) and x0 > (x1 - epsilon):
         return True
     return False
@@ -342,13 +341,13 @@ def TR_OPTICS(lines, adjacent_matrix, minPts):
     :return: 结果数组O
     """
     # 有序集合S，结果集O
-    S=[]
-    O=[]
+    S = []
+    O = []
     for i in range(len(adjacent_matrix)):
-        if len(S)==0:
-            pts=adjacent_matrix[i]
+        if len(S) == 0:
+            pts = adjacent_matrix[i]
 
-            if len(pts)>minPts:
+            if len(pts) > minPts:
                 O.append([0,i])
                 for s in adjacent_matrix[i]:
                     if s[1] not in O:
@@ -374,24 +373,30 @@ def TR_OPTICS(lines, adjacent_matrix, minPts):
     return O
 
 
+def straightify_lines():
+
+
+
+
+
 def main():
 
     lines = points2line(dataset)
     dm = distanceMatrix(lines)
     am = create_adj_matrix(lines, dm, epsilon)
-    core_dist,reachable_dist,adj_matrix=cal_core_and_reachable_dist(am,dm)
+    core_dist, reachable_dist, adj_matrix = cal_core_and_reachable_dist(am,dm)
     O = TR_OPTICS(lines, adj_matrix, minPts)
 
     print(len(O))
     print([o[0] for o in O])
-    result=[]
-    j=0
+    result = []
+    j = 0
     for o in O:
         result.append([o[1],j])
 
     print(result)
-    x=[]
-    y=[]
+    x = []
+    y = []
     for r in result:
         x.append(lines[r[0]].x1)
         x.append(lines[r[0]].x2)
@@ -400,7 +405,7 @@ def main():
 
     print(x)
     print(y)
-    plt.scatter(x,y,c="r")
+    plt.scatter(x, y, c="r")
     plt.show()
 
 
