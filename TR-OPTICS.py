@@ -10,13 +10,7 @@ dataset = readTrajectoryDataset(file)
 # OPTICS参数设定
 epsilon = 0.1
 minPts = 5
-
 CORNER_ANGLE = math.pi / 4
-
-
-def test():
-    data = format_dataset(dataset)
-
 
 
 class Line:
@@ -144,8 +138,6 @@ def GetCrossAngle(l1, l2):
     arr_1 = np.array([(l2.x2 - l2.x1), (l2.y2 - l2.y1)])
     cos_value = (float(arr_0.dot(arr_1)) / (np.sqrt(arr_0.dot(arr_0)) * np.sqrt(arr_1.dot(arr_1))))   # 注意转成浮点数运算
     return np.arccos(cos_value)
-
-
 
 
 def GetPointToLineDistance(x1, x2, y1, y2, point_x, point_y):
@@ -385,8 +377,6 @@ def TR_OPTICS(lines, adjacent_matrix, minPts):
     return O
 
 
-
-
 def points2line_2(dataset):
     """
     把轨迹文件的点转换成线段
@@ -422,71 +412,6 @@ def delete_point(line1, line2):
         return [line1, line2]  # 转角大于 pi / 4, 不删点，直接返回两条原来的输入线段
 
 
-
-
-
-
-def main():
-
-    lines = points2line(dataset)
-    print(len(lines))
-    dm = distanceMatrix(lines)
-    am = create_adj_matrix(lines, dm, epsilon)
-    core_dist, reachable_dist, adj_matrix = cal_core_and_reachable_dist(am,dm)
-    O = TR_OPTICS(lines, adj_matrix, minPts)
-
-    print(len(O))
-    print([o[0] for o in O])
-    result = []
-    j = 0
-    for o in O:
-        result.append([o[1],j])
-
-    print(result)
-    x = []
-    y = []
-    for r in result:
-        x.append(lines[r[0]].x1)
-        x.append(lines[r[0]].x2)
-        y.append(lines[r[0]].y1)
-        y.append(lines[r[0]].y2)
-
-    print(x)
-    print(y)
-    plt.scatter(x, y)
-    plt.show()
-
-
-
-
-
-    plt.plot(range(len(O)), [o[0] for o in O])
-    plt.scatter(range(len(O)), [o[0] for o in O], s=10, c='red')
-    plt.show()
-
-
-
-    # # 测试邻域函数
-    # line1 = Line([0, 1], [1, 1])
-    # line2 = Line([1, 2], [1, 1])
-    # line3 = Line([1, 1], [2, 2])
-    # line4 = Line([1, 2], [2, 1])
-    # # line1.similarity(line2)
-    #
-    # answer = []
-    # answer.append(searchNeighbors(line1, 0.5, 0.5, 1))
-    # answer.append(searchNeighbors(line1, 1.5, 0.5, 1))
-    # answer.append(searchNeighbors(line1, 2.5, 0.5, 1))
-    #
-    # answer.append(searchNeighbors(line2, 0.5, 1.5, 1))
-    # answer.append(searchNeighbors(line2, 0.5, 2.5, 1))
-    # answer.append(searchNeighbors(line2, 0.5, 3.5, 1))
-    #
-    # answer.append(searchNeighbors(line3, 1, 0.5, 1))
-    # answer.append(searchNeighbors(line3, 3, 0.5, 1))
-    #
-    # print(answer)
-
 def draw_traj(traj, color):
     x = []
     y = []
@@ -497,7 +422,6 @@ def draw_traj(traj, color):
         y.append(l.y2)
 
     plt.plot(x, y, c = color)
-
 
 
 def test_delete_point():
@@ -522,6 +446,37 @@ def test_delete_point():
     draw_traj(lines[0], 'b')
     draw_traj(new_lines, 'r')
 
+    plt.show()
+
+
+def main():
+    lines = points2line(dataset)
+    print(len(lines))
+    dm = distanceMatrix(lines)
+    am = create_adj_matrix(lines, dm, epsilon)
+    core_dist, reachable_dist, adj_matrix = cal_core_and_reachable_dist(am,dm)
+    O = TR_OPTICS(lines, adj_matrix, minPts)
+
+    print(len(O))
+    print([o[0] for o in O])
+    result = []
+    j = 0
+    for o in O:
+        result.append([o[1], j])
+    print(result)
+    x = []
+    y = []
+    for r in result:
+        x.append(lines[r[0]].x1)
+        x.append(lines[r[0]].x2)
+        y.append(lines[r[0]].y1)
+        y.append(lines[r[0]].y2)
+    print(x)
+    print(y)
+    plt.scatter(x, y)
+    plt.show()
+    plt.plot(range(len(O)), [o[0] for o in O])
+    plt.scatter(range(len(O)), [o[0] for o in O], s=10, c='red')
     plt.show()
 
 
