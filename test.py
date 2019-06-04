@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dipy.segment.metric import ResampleFeature
 import matplotlib.mlab as mlab
+from deletePoints import delete_point_all
 import utility
 # pip/pip3 install dipy
 
@@ -18,6 +19,9 @@ def try_avg(dataset, points_count):
     for i in range(1):
         plt.figure(figsize=(3, 9))
 
+        # 轨迹变硬
+        dataset = delete_point_all(dataset)
+
         # 删除短轨迹
         # if len(dataset) > 2:
         #     dataset = delete_short_trajectory(dataset)
@@ -28,6 +32,10 @@ def try_avg(dataset, points_count):
         # utility.print_dataset(dataset)
 
         # 重新取样
+        for m in range(len(dataset)):
+            for j in range(len(dataset[m])):
+                dataset[m][j] = np.asarray(dataset[m][j])
+            dataset[m] = np.asarray(dataset[m])
         dataset = utility.resample(dataset, points_count)
         # plt.subplot(3, 1, 2)
         # utility.print_dataset(dataset)

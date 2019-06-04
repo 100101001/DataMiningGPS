@@ -4,8 +4,8 @@ import math
 from pythonSample import *
 CORNER_ANGLE = math.pi / 5
 
-file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\5.txt"
-dataset = readTrajectoryDataset(file)
+# file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\5.txt"
+# dataset = readTrajectoryDataset(file)
 
 
 def delete_point(line1, line2):
@@ -221,6 +221,9 @@ def delete_point_all(dataset):
        new_lines = []
 
        # 首两个线段的处理
+       if len(lines[i]) < 2:
+           new_lines = lines[i]
+           continue
        for k in delete_point(lines[i][0], lines[i][1]):
            new_lines.append(k)
 

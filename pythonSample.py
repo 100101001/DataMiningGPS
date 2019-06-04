@@ -87,7 +87,7 @@ def main():
 
     generatedRoadSegments = []
     for i in range(0, len(dataSets)):
-        # print(str(i)+": ")
+        print(str(i)+": ")
         generatedRoadSegments.append(computeAverageTrajectory(dataSets[i]))
 
     writeSolution(generatedRoadSegments, outputFile)
