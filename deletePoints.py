@@ -1,11 +1,38 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-from pythonSample import *
 CORNER_ANGLE = math.pi / 5
+from utility import *
 
-# file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\5.txt"
-# dataset = readTrajectoryDataset(file)
+# reads a set of trajectories from a file
+def readTrajectoryDataset(fileName):
+    """
+    sample中的文件读取函数
+    :param fileName:
+    :return:
+    """
+    s = open(fileName, 'r').read()
+    comp = s.split("\n")
+    trajectory = []
+    trajectorySet = []
+    for i in range(0, len(comp)):
+        comp[i] = comp[i].split(" ")
+        if(len(comp[i]) == 2):
+            # to double??
+            point = {
+                "x": float(comp[i][0]),
+                "y": float(comp[i][1])
+            }
+            trajectory.append(point)
+        else:
+            trajectorySet.append(trajectory)
+            trajectory = []
+
+    return trajectorySet
+
+
+file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\21.txt"
+dataset = readTrajectoryDataset(file)
 
 
 def delete_point(line1, line2):
@@ -219,25 +246,24 @@ def delete_point_all(dataset):
    new_lines_all = []
    for i in range(len(lines)):
        new_lines = []
-
        # 首两个线段的处理
        if len(lines[i]) < 2:
            new_lines = lines[i]
-           continue
-       for k in delete_point(lines[i][0], lines[i][1]):
-           new_lines.append(k)
+       else:
+           for k in delete_point(lines[i][0], lines[i][1]):
+               new_lines.append(k)
 
-       # 其余线段的处理
-       j = 2
-       while j < len(lines[i]):
-           line1 = new_lines[-1]
-           line2 = lines[i][j]
-           lines_return = delete_point(line1, line2)
-           if len(lines_return) == 2:
-               new_lines.append(line2)
-           if len(lines_return) == 1:
-               new_lines[-1] = lines_return[0]
-           j += 1
+           # 其余线段的处理
+           j = 2
+           while j < len(lines[i]):
+               line1 = new_lines[-1]
+               line2 = lines[i][j]
+               lines_return = delete_point(line1, line2)
+               if len(lines_return) == 2:
+                   new_lines.append(line2)
+               if len(lines_return) == 1:
+                   new_lines[-1] = lines_return[0]
+               j += 1
 
        # 线段数组转点数组
        new_points = traj_line2point(new_lines)
@@ -245,10 +271,12 @@ def delete_point_all(dataset):
 
    return new_lines_all
 
+
 if __name__ == "__main__":
     data = format_dataset(dataset)
     result = delete_point_all(data)
     print(len(data))
+    print(len(result))
     for t, d in zip(result,data):
         plt.xlim(0, 1.1)
         plt.ylim(0, 1.1)
@@ -264,6 +292,9 @@ if __name__ == "__main__":
             b.append(point[1])
         plt.plot(x, y)
         plt.plot(a, b)
+
         plt.show()
+
+
 
 
