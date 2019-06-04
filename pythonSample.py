@@ -11,10 +11,11 @@ def computeAverageTrajectory(trajectorySet):
     trajectories = format_dataset(trajectorySet)
 
     # 取平均数的方法
-    result = try_avg(dataset=trajectories, points_count=60)
+    result = try_avg(dataset=trajectories, points_count=30)
 
     # 打印结果
     # print_result_graph(trajectories, result)
+    # plt.show()
 
     # 结果转化为可输出的格式
     result = format_result(result)

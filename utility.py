@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from dipy.segment.metric import ResampleFeature
 
 
 def format_dataset(dataset):
@@ -41,6 +42,20 @@ def format_result(result):
     return new_result
 
 
+"""
+    plt.plot 的颜色表
+    
+    ‘b’	blue
+    ‘g’	green
+    ‘r’	red
+    ‘c’	cyan
+    ‘m’	magenta
+    ‘y’	yellow
+    ‘k’	black
+    ‘w’	white
+"""
+
+
 def print_result_graph(dataset, result):
     """
     打印一组轨迹及其结果
@@ -48,9 +63,44 @@ def print_result_graph(dataset, result):
     :param result: 一条轨迹结果
     :return:
     """
+    print_dataset(dataset, 'b')
+    print_trajectory(result, 'r')
+
+
+def print_dataset(dataset, color):
+    """
+    打印一组轨迹
+    :param dataset: 数据集
+    :param color: 轨迹颜色
+    :return:
+    """
     for trajectory in dataset:
         trajectory = np.asarray(trajectory)
-        plt.plot(trajectory[:, 0], trajectory[:, 1], 'b', marker='o')
-    result = np.asarray(result)
-    plt.plot(result[:, 0], result[:, 1], 'r', marker='o')
-    plt.show()
+        plt.plot(trajectory[:, 0], trajectory[:, 1], color, marker='o')
+
+
+def print_trajectory(trajectory, color):
+    """
+    打印一条轨迹
+    :param trajectory: 轨迹数据
+    :param color: 轨迹颜色
+    :return:
+    """
+    trajectory = np.asarray(trajectory)
+    plt.plot(trajectory[:, 0], trajectory[:, 1], color, marker='o')
+
+
+def resample(dataset, points_count):
+    """
+    重新取样
+    :param dataset: 数据集，含一条路上的多条轨迹
+    :param points_count: 重新取样的点数
+    :return:
+    """
+    rs = ResampleFeature(nb_points=points_count)
+    trans_dataset = []
+    for data in dataset:
+        data = np.asarray([np.asarray(p) for p in data])
+        trans_data = rs.extract(data)
+        trans_dataset.append(trans_data)
+    return trans_dataset
