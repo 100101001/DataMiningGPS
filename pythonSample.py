@@ -11,7 +11,7 @@ def computeAverageTrajectory(trajectorySet):
     trajectories = format_dataset(trajectorySet)
 
     # 取平均数的方法
-    result = try_avg(dataset=trajectories, points_count=30)
+    result = try_avg(dataset=trajectories, points_count=80)
 
     # 打印结果
     # print_result_graph(trajectories, result)

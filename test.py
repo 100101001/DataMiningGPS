@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from dipy.segment.metric import ResampleFeature
+import matplotlib.mlab as mlab
 import utility
 # pip/pip3 install dipy
 
@@ -16,6 +17,11 @@ def try_avg(dataset, points_count):
 
     for i in range(1):
         plt.figure(figsize=(3, 9))
+
+        # 删除短轨迹
+        # if len(dataset) > 2:
+        #     dataset = delete_short_trajectory(dataset)
+
         # 加点
         # dataset = process_short_trajectory(dataset)
         # plt.subplot(3, 1, 1)
@@ -27,7 +33,9 @@ def try_avg(dataset, points_count):
         # utility.print_dataset(dataset)
 
         # 去噪
-        dataset = denoising(dataset)
+        # dataset = denoising(dataset)
+
+        # 取平均
         avg_tra = get_avg_trajectory(dataset, points_count)
         # plt.subplot(3, 1, 3)
         # utility.print_result_graph(dataset, avg_tra)
@@ -42,22 +50,38 @@ def denoising(dataset):
     :param dataset: 原始数据集
     :return: 新数据集
     """
+    if len(dataset) <= 2:
+        return dataset
+
     new_dataset = []
     # avg_trajectory = []
 
-    def is_outlier(suspect):
-        avg_point_without_suspect = [(avg_point[k]*len(point_set) - suspect[k]) / (len(point_set)-1) for k in range(2)]
-        distance = np.linalg.norm(avg_point - avg_point_without_suspect)
-        return distance > 0.06
+    def is_outlier(suspect_index):
+        suspect = point_set.pop(suspect_index)
+        cur_avg_point = np.mean(point_set, axis=0)
+        cur_sigma = np.math.sqrt(sum([np.linalg.norm(p - cur_avg_point) ** 2 for p in point_set]) / len(point_set))
+        point_set.insert(suspect_index, suspect)
+        return cur_sigma < sigma * 0.6
 
-    # def is_outlier(suspect):
+    # def is_outlier(suspect_index):
+    #     """ 自创avg变化程度法 """
+    #     suspect = point_set[suspect_index]
+    #     avg_point_without_suspect = [(avg_point[k]*len(point_set) - suspect[k]) / (len(point_set)-1) for k in range(2)]
+    #     distance = np.linalg.norm(avg_point - avg_point_without_suspect)
+    #     return distance > 0.06
+
+    # def is_outlier(suspect_index):
+    #     """ k sigma 法 """
+    #     suspect = point_set[suspect_index]
     #     distance = np.linalg.norm(suspect - avg_point)
-    #     return distance > (3 * sigma)
+    #     return distance > (1.5 * sigma)
 
     for i in range(len(dataset[0])):
         point_set = []
         for j in range(len(dataset)):
             point_set.append(dataset[j][i])
+        if len(point_set) <= 1:
+            continue
         # 平均数点
         avg_point = np.mean(point_set, axis=0)
         # 标准差
@@ -66,11 +90,10 @@ def denoising(dataset):
         # 找到噪音点
         final_point_set = []
         for j in range(len(point_set)):
-            if is_outlier(point_set[j]):
+            if is_outlier(j):
                 dataset[j][i] = [-1, -1]
             else:
                 final_point_set.append(dataset[j][i])
-
         # final_avg_point = np.mean(final_point_set, axis=0) if (len(final_point_set) > 0) else avg_point
         # avg_trajectory.append(final_avg_point)
 
@@ -88,38 +111,41 @@ def denoising(dataset):
     return new_dataset  # , avg_trajectory
 
 
+def delete_short_trajectory(dataset):
+    new_set = []
+    length = []
+    for trajectory in dataset:
+        length.append(np.linalg.norm(trajectory[0] - trajectory[-1]))
+    index = length.index(min(length))
+    dataset.pop(index)
+    return dataset
+
+
 def process_short_trajectory(dataset):
     """
     处理长度太短的轨迹
     :param dataset: 原始数据集
     :return: 新数据集
     """
-    length = []
-    short_traj = []
+    # get avg points
     first_points = []
     last_points = []
+    avg_first_point = []
+    avg_last_point = []
     for trajectory in dataset:
-        length.append(np.linalg.norm(trajectory[0] - trajectory[1]))
-    # 计算sigma
-    avg_length = np.mean(length)
-    sigma = np.math.sqrt(sum([(avg_length - l)**2 for l in length]) / len(length))
-    # 计算平均点
-    for i, l in enumerate(length):
-        if avg_length > l + sigma:
-            short_traj.append(i)
-        else:
-            first_points.append(dataset[i][0])
-            last_points.append(dataset[i][-1])
+        if np.linalg.norm(trajectory[0] - trajectory[-1]) > 0.5:
+            first_points.append(trajectory[0])
+            last_points.append(trajectory[-1])
     if len(first_points) > 0:
         avg_first_point = np.mean(first_points, axis=0).reshape(1, 2)
     if len(last_points) > 0:
         avg_last_point = np.mean(last_points, axis=0).reshape(1, 2)
 
-    for i in short_traj:
-        if len(first_points) > 0:
-            dataset[i] = np.insert(dataset[i], 0, avg_first_point, axis=0)
-        if len(last_points) > 0:
-            dataset[i] = np.append(dataset[i], avg_last_point, axis=0)
+    for i, trajectory in enumerate(dataset):
+        if np.linalg.norm(trajectory[0] - trajectory[-1]) <= 0.5:
+            trajectory = np.insert(trajectory, 0, avg_first_point, axis=0)
+            trajectory = np.append(trajectory, avg_last_point, axis=0)
+            dataset[i] = trajectory
 
     return dataset
 
@@ -141,4 +167,32 @@ def get_avg_trajectory(dataset, points_count):
         avg_point = np.mean(point_set, axis=0)
         avg_trajectory.append(avg_point)
     return avg_trajectory
+
+
+def show_sigma_distribution(dataset):
+    for i in range(len(dataset[0])):
+        sigmas = []
+        point_set = []
+        for j in range(len(dataset)):
+            point_set.append(dataset[j][i])
+        # 平均数点
+        avg_point = np.mean(point_set, axis=0)
+        # 标准差
+        sigma = np.math.sqrt(sum([np.linalg.norm(point - avg_point)**2 for point in point_set]) / len(point_set))
+
+        for j in range(len(dataset)):
+            current = point_set[0]
+            point_set.pop(0)
+            cur_avg_point = np.mean(point_set, axis=0)
+            cur_sigma = np.math.sqrt(sum([np.linalg.norm(p - cur_avg_point)**2 for p in point_set]) / len(point_set))
+            sigmas.append(cur_sigma)
+            point_set.append(current)
+
+        n, bins, patches = plt.hist(sigmas, 100, density=True, facecolor='g', alpha=0.75)
+        y = mlab.normpdf(bins, np.mean(sigmas), sigma)
+        plt.plot(bins, y, 'r--')
+        # print(sigmas)
+        print('avg:', np.mean(sigmas), 'sigma', sigma)
+    plt.show()
+
 

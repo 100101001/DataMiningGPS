@@ -19,8 +19,13 @@ def format_dataset(dataset):
             trajectory.append([point['x'], point['y']])
         # print(trajectory)
         # 轨迹方向判断和反转
-        if (abs(data[0]['x'] - tmp) > 0.5)or(abs(data[0]['y'] - tmp2) > 0.5):
+        if abs(data[0]['x'] - data[-1]['x']) < 0.3:
+            if data[0]['y'] > data[-1]['y']:
+                trajectory.reverse()
+        elif data[0]['x'] > data[-1]['x']:
             trajectory.reverse()
+        # if (abs(data[0]['x'] - tmp) > 0.5)or(abs(data[0]['y'] - tmp2) > 0.5):
+        #     trajectory.reverse()
         # print(trajectory)
         # print("---------")
         result.append(np.asarray(trajectory))
@@ -67,7 +72,7 @@ def print_result_graph(dataset, result):
     print_trajectory(result, 'r')
 
 
-def print_dataset(dataset, color):
+def print_dataset(dataset, color='b'):
     """
     打印一组轨迹
     :param dataset: 数据集
@@ -104,3 +109,17 @@ def resample(dataset, points_count):
         trans_data = rs.extract(data)
         trans_dataset.append(trans_data)
     return trans_dataset
+
+
+def get_line(point1, point2):
+    """
+    获取两点连成的直线的斜率和截距
+    :param point1:
+    :param point2:
+    :return:
+    """
+    if point1[0] == point2[0]:
+        return False, False
+    k = (point2[1] - point1[1]) / (point2[0] - point1[0])
+    b = point1[1] - k * point1[0]
+    return k, b
