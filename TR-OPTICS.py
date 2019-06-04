@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\5.txt"
 dataset = readTrajectoryDataset(file)
 # OPTICS参数设定
-epsilon = 0.05
-minPts = 13
+epsilon = 0.1
+minPts = 5
 
 
 class Line:
@@ -165,6 +165,14 @@ def points2line(dataset):
             p1 = [trajectory[i]['x'],trajectory[i]['y']]
             p2 = [trajectory[i+1]['x'], trajectory[i+1]['y']]
             lines.append(Line(p1,p2))
+
+    for trajectory in dataset:
+        xs=[]
+        ys=[]
+        for i in range(0, len(trajectory) - 1):
+            xs.append(trajectory[i]['x'])
+            ys.append(trajectory[i]['y'])
+        plt.plot(xs,ys)
     return lines
 
 
@@ -374,13 +382,36 @@ def main():
     core_dist,reachable_dist,adj_matrix=cal_core_and_reachable_dist(am,dm)
     O = TR_OPTICS(lines, adj_matrix, minPts)
 
-    
+    print(len(O))
+    print([o[0] for o in O])
+    result=[]
+    j=0
+    for o in O:
+        result.append([o[1],j])
+
+    print(result)
+    x=[]
+    y=[]
+    for r in result:
+        x.append(lines[r[0]].x1)
+        x.append(lines[r[0]].x2)
+        y.append(lines[r[0]].y1)
+        y.append(lines[r[0]].y2)
+
+    print(x)
+    print(y)
+    plt.scatter(x,y,c="r")
+    plt.show()
+
+
+
+
+
     plt.plot(range(len(O)), [o[0] for o in O])
     plt.scatter(range(len(O)), [o[0] for o in O], s=10, c='red')
     plt.show()
 
-    print(len(O))
-    print([o[0] for o in O])
+
 
     # # 测试邻域函数
     # line1 = Line([0, 1], [1, 1])
