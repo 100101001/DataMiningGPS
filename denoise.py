@@ -21,10 +21,8 @@ def dbscan_preprocess(point_trajs):
     for i in range(len(point_trajs)):
         for j in range(len(point_trajs[i])):
             points.append(point_trajs[i][j])
-
-
-    # return points, p_idx_dict, p_idx
     return points
+
 
 def main():
     data = format_dataset(dataset)
