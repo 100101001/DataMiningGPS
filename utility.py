@@ -11,6 +11,12 @@ def format_dataset(dataset):
     """
     tmp = dataset[0][0]['x']
     tmp2 = dataset[0][0]['y']
+
+    if abs(dataset[0][0]['x'] - dataset[0][-1]['x']) > 0.5:
+        use_x = True
+    else:
+        use_x = True if abs(dataset[0][0]['x'] - dataset[0][-1]['x']) >= abs(dataset[0][0]['y'] - dataset[0][-1]['y']) else False
+
     result = []
     for data in dataset:
         trajectory = []
@@ -19,11 +25,18 @@ def format_dataset(dataset):
             trajectory.append([point['x'], point['y']])
         # print(trajectory)
         # 轨迹方向判断和反转
-        if abs(data[0]['x'] - data[-1]['x']) < 0.3:
+        if use_x:
+            if data[0]['x'] > data[-1]['x']:
+                trajectory.reverse()
+        else:
             if data[0]['y'] > data[-1]['y']:
                 trajectory.reverse()
-        elif data[0]['x'] > data[-1]['x']:
-            trajectory.reverse()
+        # if abs(data[0]['x'] - data[-1]['x']) < 0.3:
+        #     if data[0]['y'] <= data[-1]['y'] != to_up:
+        #         trajectory.reverse()
+        # elif data[0]['x'] > data[-1]['x']:
+        #     trajectory.reverse()
+
         # if (abs(data[0]['x'] - tmp) > 0.5)or(abs(data[0]['y'] - tmp2) > 0.5):
         #     trajectory.reverse()
         # print(trajectory)

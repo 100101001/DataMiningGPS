@@ -17,14 +17,26 @@ def try_avg(dataset, points_count):
     avg_tra = []
 
     for i in range(1):
-        plt.figure(figsize=(3, 9))
+        # plt.figure(figsize=(6, 3))
+        # plt.subplot(1, 2, 1)
+        # utility.print_dataset(dataset)
 
         # 轨迹变硬
-        dataset = delete_point_all(dataset)
+        # dataset = delete_point_all(dataset)
+        #
+        # dataset = utility.resample(dataset, 10)
+        # plt.subplot(1, 2, 2)
+        # utility.print_dataset(dataset)
+        # plt.show()
+        #
+        # dataset = denoising(dataset)
 
         # 删除短轨迹
         # if len(dataset) > 2:
         #     dataset = delete_short_trajectory(dataset)
+        #
+        # plt.subplot(3, 1, 2)
+        # utility.print_dataset(dataset)
 
         # 加点
         # dataset = process_short_trajectory(dataset)
@@ -32,13 +44,11 @@ def try_avg(dataset, points_count):
         # utility.print_dataset(dataset)
 
         # 重新取样
-        for m in range(len(dataset)):
-            for j in range(len(dataset[m])):
-                dataset[m][j] = np.asarray(dataset[m][j])
-            dataset[m] = np.asarray(dataset[m])
+        # for m in range(len(dataset)):
+        #     for j in range(len(dataset[m])):
+        #         dataset[m][j] = np.asarray(dataset[m][j])
+        #     dataset[m] = np.asarray(dataset[m])
         dataset = utility.resample(dataset, points_count)
-        # plt.subplot(3, 1, 2)
-        # utility.print_dataset(dataset)
 
         # 去噪
         # dataset = denoising(dataset)
@@ -65,24 +75,23 @@ def denoising(dataset):
     # avg_trajectory = []
 
     def is_outlier(suspect_index):
-        suspect = point_set.pop(suspect_index)
-        cur_avg_point = np.mean(point_set, axis=0)
-        cur_sigma = np.math.sqrt(sum([np.linalg.norm(p - cur_avg_point) ** 2 for p in point_set]) / len(point_set))
-        point_set.insert(suspect_index, suspect)
-        return cur_sigma < sigma * 0.6
+        """ sigma变化法 """
+    #     suspect = point_set.pop(suspect_index)
+    #     cur_avg_point = np.mean(point_set, axis=0)
+    #     cur_sigma = np.math.sqrt(sum([np.linalg.norm(p - cur_avg_point) ** 2 for p in point_set]) / len(point_set))
+    #     point_set.insert(suspect_index, suspect)
+    #     return cur_sigma < sigma * 0.6
 
-    # def is_outlier(suspect_index):
-    #     """ 自创avg变化程度法 """
-    #     suspect = point_set[suspect_index]
-    #     avg_point_without_suspect = [(avg_point[k]*len(point_set) - suspect[k]) / (len(point_set)-1) for k in range(2)]
-    #     distance = np.linalg.norm(avg_point - avg_point_without_suspect)
-    #     return distance > 0.06
+        """ avg变化法 """
+        # suspect = point_set[suspect_index]
+        # avg_point_without_suspect = [(avg_point[k]*len(point_set) - suspect[k]) / (len(point_set)-1) for k in range(2)]
+        # distance = np.linalg.norm(avg_point - avg_point_without_suspect)
+        # return distance > 0.06
 
-    # def is_outlier(suspect_index):
-    #     """ k sigma 法 """
-    #     suspect = point_set[suspect_index]
-    #     distance = np.linalg.norm(suspect - avg_point)
-    #     return distance > (1.5 * sigma)
+        """ k sigma 法 """
+        suspect = point_set[suspect_index]
+        distance = np.linalg.norm(suspect - avg_point)
+        return distance > (2 * sigma)
 
     for i in range(len(dataset[0])):
         point_set = []
@@ -123,10 +132,12 @@ def delete_short_trajectory(dataset):
     new_set = []
     length = []
     for trajectory in dataset:
-        length.append(np.linalg.norm(trajectory[0] - trajectory[-1]))
-    index = length.index(min(length))
-    dataset.pop(index)
-    return dataset
+        l = np.linalg.norm(np.asarray(trajectory[0]) - np.asarray(trajectory[-1]))
+        if l > 0.4:
+            new_set.append(trajectory)
+        else:
+            print('delete:', l)
+    return new_set
 
 
 def process_short_trajectory(dataset):
@@ -141,7 +152,7 @@ def process_short_trajectory(dataset):
     avg_first_point = []
     avg_last_point = []
     for trajectory in dataset:
-        if np.linalg.norm(trajectory[0] - trajectory[-1]) > 0.5:
+        if np.linalg.norm(np.asarray(trajectory[0]) - np.asarray(trajectory[-1])) > 0.5:
             first_points.append(trajectory[0])
             last_points.append(trajectory[-1])
     if len(first_points) > 0:
@@ -150,7 +161,7 @@ def process_short_trajectory(dataset):
         avg_last_point = np.mean(last_points, axis=0).reshape(1, 2)
 
     for i, trajectory in enumerate(dataset):
-        if np.linalg.norm(trajectory[0] - trajectory[-1]) <= 0.5:
+        if np.linalg.norm(np.asarray(trajectory[0]) - np.asarray(trajectory[-1])) <= 0.5:
             trajectory = np.insert(trajectory, 0, avg_first_point, axis=0)
             trajectory = np.append(trajectory, avg_last_point, axis=0)
             dataset[i] = trajectory

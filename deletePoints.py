@@ -31,8 +31,8 @@ def readTrajectoryDataset(fileName):
     return trajectorySet
 
 
-file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\21.txt"
-dataset = readTrajectoryDataset(file)
+# file = "E:\\a_school\\books\\大三下\\挖掘\\challenge\\gps\\training_data\\21.txt"
+# dataset = readTrajectoryDataset(file)
 
 
 def delete_point(line1, line2):
